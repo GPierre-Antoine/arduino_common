@@ -20,11 +20,16 @@ namespace pag
             numeral_base (int val);
         };
 
+
         enum input_management
         {
             mode_blocking = true,
             mode_unblocking = false
         };
+
+        template <typename iter_t>
+        struct collection_helper;
+
         class message_helper
         {
         private:
@@ -46,8 +51,44 @@ namespace pag
             template <typename T>
             message_helper& operator>>(T & val);
 
+            template <typename iter_t>
+            message_helper& operator<<(const pag::message::collection_helper<iter_t> &array);
+
             /**/
         };
+
+
+        template <typename iter_t>
+        struct collection_helper
+        {
+            typedef iter_t (*functor)(iter_t);
+            iter_t * begin;
+            iter_t * end;
+            functor f;
+
+
+            collection_helper(iter_t *begin, iter_t *end, functor val);
+
+        };
+
+
+
+        template <typename iter_t>
+        collection_helper<iter_t>::collection_helper(iter_t *begin, iter_t *end, functor val) : begin(begin), end (end), f (val)
+        {}
+
+        template<typename iter_t>
+        message_helper &message_helper::operator<<(const pag::message::collection_helper<iter_t> &array)
+        {
+            *this << '[';
+            for (iter_t* i = array.begin;i<array.end-1;++i)
+            {
+                *this << array.f(*i) << ',' << ' ';
+            }
+            *this << array.f (*(array.end-1)) << ']';
+            return *this;
+        }
+
 
         template <unsigned base>
         message_helper &message_helper::operator<<(const pag::message::numeral_base<base> &stru)
@@ -89,6 +130,8 @@ namespace pag
     using message::endl;
     template <unsigned num_base>
     using base = struct message::numeral_base<num_base>;
+    template <typename iter_t>
+    using collection = struct message::collection_helper<iter_t>;
 }
 
 #endif //DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
