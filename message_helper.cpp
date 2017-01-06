@@ -6,6 +6,8 @@
 
 using namespace pag::message;
 
+
+
 message_helper::message_helper(Stream & s) : stream (&s), blocking_mode(true)
 {}
 
