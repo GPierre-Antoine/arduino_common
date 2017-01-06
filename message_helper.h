@@ -27,7 +27,7 @@ namespace pag
             mode_unblocking = false
         };
 
-        template <typename iter_t>
+        template <typename iter_t,typename return_type>
         struct collection_helper;
 
         class message_helper
@@ -51,34 +51,34 @@ namespace pag
             template <typename T>
             message_helper& operator>>(T & val);
 
-            template <typename iter_t>
-            message_helper& operator<<(const pag::message::collection_helper<iter_t> &array);
+            template <typename iter_t,typename return_type>
+            message_helper& operator<<(const pag::message::collection_helper<iter_t,return_type> &array);
 
             /**/
         };
 
 
-        template <typename iter_t>
+        template <typename iter_t,typename return_type>
         struct collection_helper
         {
-            typedef iter_t (*functor)(iter_t);
             iter_t * begin;
             iter_t * end;
-            functor f;
+            return_type (*f)(iter_t);
 
 
-            collection_helper(iter_t *begin, iter_t *end, functor val);
+            collection_helper(iter_t *begin, iter_t *end, return_type (*val)(iter_t));
 
         };
 
 
 
-        template <typename iter_t>
-        collection_helper<iter_t>::collection_helper(iter_t *begin, iter_t *end, functor val) : begin(begin), end (end), f (val)
+        template <typename iter_t,typename return_type>
+        collection_helper<iter_t,return_type>::collection_helper(iter_t *begin, iter_t *end, return_type(*val)(iter_t)):
+                begin(begin), end (end), f (val)
         {}
 
-        template<typename iter_t>
-        message_helper &message_helper::operator<<(const pag::message::collection_helper<iter_t> &array)
+        template <typename iter_t,typename return_type>
+        message_helper &message_helper::operator<<(const pag::message::collection_helper<iter_t,return_type> &array)
         {
             *this << '[';
             for (iter_t* i = array.begin;i<array.end-1;++i)
@@ -130,8 +130,8 @@ namespace pag
     using message::endl;
     template <unsigned num_base>
     using base = struct message::numeral_base<num_base>;
-    template <typename iter_t>
-    using collection = struct message::collection_helper<iter_t>;
+    template <typename iter_t,typename return_type>
+    using collection = struct message::collection_helper<iter_t,return_type>;
 }
 
 #endif //DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
