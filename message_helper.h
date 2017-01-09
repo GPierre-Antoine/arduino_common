@@ -5,11 +5,10 @@
 #ifndef DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
 #define DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
 
-#include <Arduino.h>
+//#include <Arduino.h>
 
 namespace pag
 {
-
     namespace message
     {
 
@@ -21,14 +20,14 @@ namespace pag
         };
 
 
+        template <typename iter_t>
+        class bridge;
+
         enum input_management
         {
             mode_blocking = true,
             mode_unblocking = false
         };
-
-        template <typename iter_t>
-        struct bridge;
 
         class message_helper
         {
@@ -51,7 +50,7 @@ namespace pag
             template <typename T>
             message_helper& operator>>(T & val);
 
-            template <typename iter_t,typename return_type>
+            template <typename iter_t>
             message_helper& operator<<(const pag::message::bridge<iter_t> &array);
 
             /**/
@@ -59,8 +58,9 @@ namespace pag
 
 
         template <typename iter_t>
-        struct bridge
+        class bridge
         {
+        public:
             iter_t * begin;
             iter_t * end;
             message_helper& (*f)(iter_t,iter_t,message_helper&);
@@ -69,14 +69,14 @@ namespace pag
         };
 
         template <typename iter_t>
-        bridge::bridge(iter_t *begin, iter_t *end, message_helper &(*val)(iter_t,iter_t,message_helper&)) :
-        begin (begin), end (end), f (val)
+        bridge<iter_t>::bridge(iter_t *begin, iter_t *end, message_helper &(*val)(iter_t,iter_t,message_helper&)) :
+                begin (begin), end (end), f (val)
         {}
 
         template <typename iter_t>
         message_helper& message_helper::operator<<(const pag::message::bridge<iter_t> &array)
         {
-            *this << '[' << array.f(array.begin,array.end,*this) << ']';
+            return *this << '[' << array.f(array.begin,array.end,*this) << ']';
         }
 
         template <unsigned base>
@@ -118,7 +118,7 @@ namespace pag
     template <unsigned num_base>
     using base = struct message::numeral_base<num_base>;
     template <typename iter_t>
-    using message::bridge<iter_t>;
+    using bridge =  message::bridge<iter_t>;
 }
 
 #endif //DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
