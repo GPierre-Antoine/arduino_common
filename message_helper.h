@@ -27,9 +27,6 @@ namespace pag
             mode_unblocking = false
         };
 
-        template <typename iter_t,typename return_type>
-        struct collection_helper;
-
         template <typename iter_t>
         struct bridge;
 
