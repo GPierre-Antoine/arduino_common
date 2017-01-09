@@ -30,6 +30,9 @@ namespace pag
         template <typename iter_t,typename return_type>
         struct collection_helper;
 
+        template <typename iter_t>
+        struct bridge;
+
         class message_helper
         {
         private:
@@ -52,43 +55,32 @@ namespace pag
             message_helper& operator>>(T & val);
 
             template <typename iter_t,typename return_type>
-            message_helper& operator<<(const pag::message::collection_helper<iter_t,return_type> &array);
+            message_helper& operator<<(const pag::message::bridge<iter_t> &array);
 
             /**/
         };
 
 
-        template <typename iter_t,typename return_type>
-        struct collection_helper
+        template <typename iter_t>
+        struct bridge
         {
             iter_t * begin;
             iter_t * end;
-            return_type (*f)(iter_t);
-
-
-            collection_helper(iter_t *begin, iter_t *end, return_type (*val)(iter_t));
+            message_helper& (*f)(iter_t,iter_t,message_helper&);
+            bridge(iter_t *begin, iter_t *end, message_helper& (*val)(iter_t,iter_t,message_helper&));
 
         };
 
-
-
-        template <typename iter_t,typename return_type>
-        collection_helper<iter_t,return_type>::collection_helper(iter_t *begin, iter_t *end, return_type(*val)(iter_t)):
-                begin(begin), end (end), f (val)
+        template <typename iter_t>
+        bridge::bridge(iter_t *begin, iter_t *end, message_helper &(*val)(iter_t,iter_t,message_helper&)) :
+        begin (begin), end (end), f (val)
         {}
 
-        template <typename iter_t,typename return_type>
-        message_helper &message_helper::operator<<(const pag::message::collection_helper<iter_t,return_type> &array)
+        template <typename iter_t>
+        message_helper& message_helper::operator<<(const pag::message::bridge<iter_t> &array)
         {
-            *this << '[';
-            for (iter_t* i = array.begin;i<array.end-1;++i)
-            {
-                *this << array.f(*i) << ',' << ' ';
-            }
-            *this << array.f (*(array.end-1)) << ']';
-            return *this;
+            *this << '[' << array.f(array.begin,array.end,*this) << ']';
         }
-
 
         template <unsigned base>
         message_helper &message_helper::operator<<(const pag::message::numeral_base<base> &stru)
@@ -99,9 +91,7 @@ namespace pag
 
         template <unsigned base>
         pag::message::numeral_base<base>::numeral_base(int val) : val(val)
-        {
-
-        }
+        {}
 
 
         template <typename T>
@@ -130,8 +120,8 @@ namespace pag
     using message::endl;
     template <unsigned num_base>
     using base = struct message::numeral_base<num_base>;
-    template <typename iter_t,typename return_type>
-    using collection = struct message::collection_helper<iter_t,return_type>;
+    template <typename iter_t>
+    using message::bridge<iter_t>;
 }
 
 #endif //DEV_UBBO_DOCKSTATION_MESSAGE_HELPER_H
