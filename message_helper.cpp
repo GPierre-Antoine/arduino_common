@@ -6,10 +6,13 @@
 
 using namespace pag::message;
 
-
-
-message_helper::message_helper(Stream & s) : stream (&s), blocking_mode(true)
+message_helper::message_helper(Stream & s) : stream (&s)
 {}
+
+void message_helper::set_input_mode(input_management val)
+{
+    blocking_mode = val;
+}
 
 message_helper& message_helper::operator<<(message_helper&(*function)(message_helper&))
 {
@@ -23,10 +26,8 @@ pag::message::message_helper& pag::message::endl(pag::message::message_helper &o
 }
 
 template <>
-pag::message::message_helper& pag::message::message_helper::operator>>(long & val)
+pag::message::message_helper& pag::message::message_helper::operator>>(int & val)
 {
-    if (blocking_mode)
-        while(!stream->available());
     const int number = stream->peek();
     if (number >= '0' && number <= '9')
         val = stream->parseInt();
@@ -34,10 +35,8 @@ pag::message::message_helper& pag::message::message_helper::operator>>(long & va
 }
 
 template <>
-pag::message::message_helper& pag::message::message_helper::operator>>(int &val)
+pag::message::message_helper& pag::message::message_helper::operator>>(long & val)
 {
-    if (blocking_mode)
-        while(!stream->available());
     const int number = stream->peek();
     if (number >= '0' && number <= '9')
         val = stream->parseInt();
@@ -47,8 +46,6 @@ pag::message::message_helper& pag::message::message_helper::operator>>(int &val)
 template <>
 pag::message::message_helper& pag::message::message_helper::operator>>(unsigned & val)
 {
-    if (blocking_mode)
-        while(!stream->available());
     const int number = stream->peek();
     if (number >= '0' && number <= '9')
         val = stream->parseInt();
@@ -58,15 +55,10 @@ pag::message::message_helper& pag::message::message_helper::operator>>(unsigned 
 template <>
 pag::message::message_helper& pag::message::message_helper::operator>>(float & val)
 {
-    if (blocking_mode)
-        while(!stream->available());
     const int number = stream->peek();
     if (number >= '0' && number <= '9')
         val = stream->parseFloat();
     return *this;
 }
 
-void pag::message::message_helper::set_input_mode(input_management val)
-{
-    this->blocking_mode = val;
-}
+
