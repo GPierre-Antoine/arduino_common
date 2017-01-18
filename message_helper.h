@@ -51,22 +51,40 @@ namespace pag
             message_helper& operator>>(T & val);
 
             template <typename iter_t>
-            message_helper& operator<<(const pag::message::bridge<iter_t> &array);
+            message_helper& operator<<(const pag::message::editable &array);
 
             /**/
         };
 
+        class editable
+        {
+        public:
+            message_helper& run(message_helper&);
+        };
+
+        message_helper& editable::edit(message_helper & os)
+        {
+            return os;
+        }
+
 
         template <typename iter_t>
-        class bridge
+        class bridge : public editable
         {
         public:
             iter_t * begin;
             iter_t * end;
             message_helper& (*f)(iter_t,iter_t,message_helper&);
             bridge(iter_t *begin, iter_t *end, message_helper& (*val)(iter_t,iter_t,message_helper&));
+            message_helper& edit (message_helper&);
 
         };
+
+        template <typename iter_t>
+        message_helper& bridge<iter_t>::edit(message_helper & str)
+        {
+            return str << f(begin,end,str);
+        }
 
         template <typename iter_t>
         bridge<iter_t>::bridge(iter_t *begin, iter_t *end, message_helper &(*val)(iter_t,iter_t,message_helper&)) :
@@ -74,10 +92,11 @@ namespace pag
         {}
 
         template <typename iter_t>
-        message_helper& message_helper::operator<<(const pag::message::bridge<iter_t> &array)
+        message_helper& message_helper::operator<<(const pag::message::editable<iter_t> &obj)
         {
-            return *this << '[' << array.f(array.begin,array.end,*this) << ']';
+            return *this << array.edit(*this);
         }
+
 
         template <unsigned base>
         message_helper &message_helper::operator<<(const pag::message::numeral_base<base> &stru)
